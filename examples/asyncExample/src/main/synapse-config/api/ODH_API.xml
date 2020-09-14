@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<api context="/ods" name="ODH_API" xmlns="http://ws.apache.org/ns/synapse">
+    <resource methods="POST" url-mapping="/odh">
+        <inSequence>
+            <property expression="json-eval($.endpoint)" name="endpoint" scope="default" type="STRING"/>
+            <send>
+                <endpoint>
+                    <http method="post" uri-template="http://localhost:3000/odh">
+                        <suspendOnFailure>
+                            <initialDuration>-1</initialDuration>
+                            <progressionFactor>-1</progressionFactor>
+                            <maximumDuration>0</maximumDuration>
+                        </suspendOnFailure>
+                        <markForSuspension>
+                            <retriesBeforeSuspension>0</retriesBeforeSuspension>
+                        </markForSuspension>
+                    </http>
+                </endpoint>
+            </send>
+        </inSequence>
+        <outSequence>
+            <property expression="json-eval($.requestId)" name="requestId" scope="default" type="STRING"/>
+            <dbreport>
+                <connection>
+                    <pool>
+                        <driver>org.postgresql.Driver</driver>
+                        <url>jdbc:postgresql://192.168.2.121:5432/wso2</url>
+                        <user>wso2</user>
+                        <password>wso2</password>
+                    </pool>
+                </connection>
+                <statement>
+                    <sql><![CDATA[insert into wso2.request_endpoint(request_id, endpoint) values(?, ?)]]></sql>
+                    <parameter expression="get-property('requestId')" type="VARCHAR"/>
+                    <parameter expression="get-property('endpoint')" type="VARCHAR"/>
+                </statement>
+            </dbreport>
+            <payloadFactory media-type="json">
+                <format>{
+	requstId: "$1";
+}</format>
+                <args>
+                    <arg evaluator="xml" expression="get-property('endpoint')"/>
+                </args>
+            </payloadFactory>
+            <respond/>
+        </outSequence>
+        <faultSequence/>
+    </resource>
+    <resource methods="POST" url-mapping="/odh/response">
+        <inSequence>
+            <property expression="json-eval($.requestId)" name="requestId" scope="default" type="STRING"/>
+            <dblookup>
+                <connection>
+                    <pool>
+                        <driver>org.postgresql.Driver</driver>
+                        <url>jdbc:postgresql://192.168.2.121:5432/wso2</url>
+                        <user>wso2</user>
+                        <password>wso2</password>
+                    </pool>
+                </connection>
+                <statement>
+                    <sql><![CDATA[select * from request_endpoint where request_id =?]]></sql>
+                    <parameter expression="get-property('requestId')" type="VARCHAR"/>
+                    <result column="endpoint" name="uri.var.endpoint"/>
+                </statement>
+            </dblookup>
+            <call>
+                <endpoint>
+                    <http method="post" uri-template="{uri.var.endpoint}">
+                        <suspendOnFailure>
+                            <initialDuration>-1</initialDuration>
+                            <progressionFactor>-1</progressionFactor>
+                            <maximumDuration>0</maximumDuration>
+                        </suspendOnFailure>
+                        <markForSuspension>
+                            <retriesBeforeSuspension>0</retriesBeforeSuspension>
+                        </markForSuspension>
+                    </http>
+                </endpoint>
+            </call>
+            <respond/>
+        </inSequence>
+        <outSequence/>
+        <faultSequence/>
+    </resource>
+</api>

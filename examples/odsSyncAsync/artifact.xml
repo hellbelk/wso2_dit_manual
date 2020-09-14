@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?><artifacts>
+    <artifact name="odsAPI" groupId="ru.hellbelk.api" version="1.0.0" type="synapse/api" serverRole="EnterpriseServiceBus">
+        <file>src/main/synapse-config/api/odsAPI.xml</file>
+    </artifact>
+    <artifact name="odsMessageStore" groupId="ru.hellbelk.message-store" version="1.0.0" type="synapse/message-store" serverRole="EnterpriseServiceBus">
+        <file>src/main/synapse-config/message-stores/odsMessageStore.xml</file>
+    </artifact>
+    <artifact name="COLLECT_ODS_DATA_SEQ" groupId="ru.hellbelk.sequence" version="1.0.0" type="synapse/sequence" serverRole="EnterpriseServiceBus">
+        <file>src/main/synapse-config/sequences/COLLECT_ODS_DATA_SEQ.xml</file>
+    </artifact>
+    <artifact name="odsMessageProcessor" groupId="ru.hellbelk.message-processors" version="1.0.0" type="synapse/message-processors" serverRole="EnterpriseServiceBus">
+        <file>src/main/synapse-config/message-processors/odsMessageProcessor.xml</file>
+    </artifact>
+    <artifact name="ODS_WSDL_EP" groupId="ru.hellbelk.endpoint" version="1.0.0" type="synapse/endpoint" serverRole="EnterpriseServiceBus">
+        <file>src/main/synapse-config/endpoints/ODS_WSDL_EP.xml</file>
+    </artifact>
+</artifacts>

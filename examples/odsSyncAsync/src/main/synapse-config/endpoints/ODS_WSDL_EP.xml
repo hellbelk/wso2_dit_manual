@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<endpoint name="ODS_WSDL_EP" xmlns="http://ws.apache.org/ns/synapse">
+    <wsdl port="DictionaryServiceImplPort" service="dictionaryService" uri="http://ods.mos.ru/webservices/dictionaryService?wsdl">
+        <suspendOnFailure>
+            <initialDuration>-1</initialDuration>
+            <progressionFactor>1.0</progressionFactor>
+        </suspendOnFailure>
+        <markForSuspension>
+            <retriesBeforeSuspension>0</retriesBeforeSuspension>
+        </markForSuspension>
+    </wsdl>
+</endpoint>

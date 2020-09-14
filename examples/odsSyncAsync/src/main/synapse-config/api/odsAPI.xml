@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<api context="/ods" name="odsAPI" xmlns="http://ws.apache.org/ns/synapse">
+    <resource methods="POST" uri-template="myresource">
+        <inSequence>
+            <property expression="json-eval($.endpoint)" name="endpoint" scope="default" type="STRING"/>
+            <property expression="fn:substring-after(get-property('MessageID'),'uuid:')" name="requestId" scope="default" type="STRING"/>
+            <payloadFactory media-type="json">
+                <format>{
+	"requestId": "$1",
+	"endpoint": "$2"	
+}</format>
+                <args>
+                    <arg evaluator="xml" expression="get-property('requestId')"/>
+                    <arg evaluator="xml" expression="get-property('endpoint')"/>
+                </args>
+            </payloadFactory>
+            <store messageStore="odsMessageStore"/>
+            <respond/>
+        </inSequence>
+        <outSequence/>
+        <faultSequence/>
+    </resource>
+</api>

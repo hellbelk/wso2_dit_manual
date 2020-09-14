@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<sequence name="COLLECT_ODS_DATA_SEQ" trace="disable" xmlns="http://ws.apache.org/ns/synapse">
+    <property expression="json-eval($.endpoint)" name="uri.var.endpoint" scope="default" type="STRING"/>
+    <property expression="json-eval($.requestId)" name="requestId" scope="default" type="STRING"/>
+    <payloadFactory media-type="xml">
+        <format>
+            <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:web="http://webservices.ods.fors.ru/">
+                <soapenv:Header/>
+                <soapenv:Body>
+                    <web:getOdh/>
+                </soapenv:Body>
+            </soapenv:Envelope>
+        </format>
+        <args/>
+    </payloadFactory>
+    <header name="Content-Type" scope="transport" value="text/xml; charset=UTF-8"/>
+    <call blocking="true">
+        <endpoint key="ODS_WSDL_EP"/>
+    </call>
+    <iterate expression="//odh[position()&lt;5]" sequential="true">
+        <target>
+            <sequence>
+                <enrich>
+                    <source clone="false" type="body"/>
+                    <target property="Odh" type="property"/>
+                </enrich>
+                <payloadFactory media-type="xml">
+                    <format>
+                        <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:web="http://webservices.ods.fors.ru/">
+                            <soapenv:Header/>
+                            <soapenv:Body>
+                                <web:getOdhPassport>
+                                    <odhId xmlns="">$1</odhId>
+                                </web:getOdhPassport>
+                            </soapenv:Body>
+                        </soapenv:Envelope>
+                    </format>
+                    <args>
+                        <arg evaluator="xml" expression="//odh/id/text()"/>
+                    </args>
+                </payloadFactory>
+                <header name="Content-Type" scope="transport" value="text/xml; charset=UTF-8"/>
+                <call>
+                    <endpoint key="ODS_WSDL_EP"/>
+                </call>
+                <enrich>
+                    <source clone="true" xpath="//totalArea"/>
+                    <target action="child" xpath="$ctx:Odh"/>
+                </enrich>
+                <enrich>
+                    <source clone="true" xpath="//footwayArea"/>
+                    <target action="child" xpath="$ctx:Odh"/>
+                </enrich>
+                <enrich>
+                    <source clone="true" xpath="$ctx:Odh"/>
+                    <target type="body"/>
+                </enrich>
+                <log level="custom">
+                    <property expression="//odh/id/text()" name="finished"/>
+                </log>
+            </sequence>
+        </target>
+    </iterate>
+    <aggregate>
+        <completeCondition>
+            <messageCount max="-1" min="-1"/>
+        </completeCondition>
+        <onComplete expression="//odh">
+            <log level="full"/>
+            <header name="Content-Type" scope="transport" value="application/json; charset=UTF-8"/>
+            <payloadFactory media-type="json">
+                <format>
+					{
+					"requestId": "$1",
+					"data": "$2"
+					}
+				</format>
+                <args>
+                    <arg evaluator="xml" expression="get-property('requestId')"/>
+                    <arg evaluator="xml" expression="//odh"/>
+                </args>
+            </payloadFactory>
+            <send>
+                <endpoint>
+                    <http method="post" uri-template="{uri.var.endpoint}">
+                        <suspendOnFailure>
+                            <initialDuration>-1</initialDuration>
+                            <progressionFactor>1</progressionFactor>
+                        </suspendOnFailure>
+                        <markForSuspension>
+                            <retriesBeforeSuspension>0</retriesBeforeSuspension>
+                        </markForSuspension>
+                    </http>
+                </endpoint>
+            </send>
+        </onComplete>
+    </aggregate>
+</sequence>
